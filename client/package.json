@@ -1,13 +1,13 @@
 {
-  "name": "client",
+  "name": "",
   "version": "1.0.0",
   "description": "Collaborative Listening Room",
-  "main": "index.js",
+  "main": "test.js",
   "scripts": {
-    "dev": "webpack-dev-server"
+    "dev": "webpack serve --mode development --env development"
   },
   "keywords": [],
-  "author": "",
+  "author": "JD",
   "license": "ISC",
   "dependencies": {
     "react": "^17.0.0",
