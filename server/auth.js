@@ -1,52 +1,40 @@
-/**
- * This is an example of a basic node.js script that performs
- * the Authorization Code oAuth2 flow to authenticate against
- * the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
- */
+const express = require('express');
+const request = require('request');
+const cors = require('cors');
+const querystring = require('querystring');
+const cookieParser = require('cookie-parser');
 
-var express = require('express');
-var request = require('request');
-var cors = require('cors');
-var querystring = require('querystring');
-var cookieParser = require('cookie-parser');
-
-var client_id = 'fc4b741943c84f33bf19f3dae240d7ea'; // Client ID
-var client_secret = '799316e42adf419e918815a08b83ceed'; // Secret
-var redirect_uri = 'http://localhost:8888/callback'; // Redirect URI
+const client_id = 'fc4b741943c84f33bf19f3dae240d7ea'; // Client ID
+const redirect_uri = 'http://localhost:8888/callback'; // Redirect URI
+const client_secret = require('./config/authConfig.js').CLIENT_SECRET; // Secret
 
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
  * @return {string} the generated string
  */
-var generateRandomString = function(length) {
+const generateRandomString = function(length) {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
   for (let i = 0; i < length; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
 };
 
-var stateKey = 'spotify_auth_state';
+const stateKey = 'spotify_auth_state';
 
-var app = express();
+const app = express();
 
-app.use(express.static(__dirname + '/public'))
+app.use(express.static('../client/public'))
    .use(cors())
    .use(cookieParser());
 
 app.get('/login', function(req, res) {
-
-  var state = generateRandomString(16);
+  const state = generateRandomString(16);
   res.cookie(stateKey, state);
-
-  // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  // application requests authorization
+  const scope = 'user-read-private user-read-email';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -58,14 +46,12 @@ app.get('/login', function(req, res) {
 });
 
 app.get('/callback', function(req, res) {
-
-  // your application requests refresh and access tokens
+  // application requests refresh and access tokens
   // after checking the state parameter
-
-  var code = req.query.code || null;
-  var state = req.query.state || null;
-  var storedState = req.cookies ? req.cookies[stateKey] : null;
-
+  const code = req.query.code || null;
+  const state = req.query.state || null;
+  const storedState = req.cookies ? req.cookies[stateKey] : null;
+  
   if (state === null || state !== storedState) {
     res.redirect('/#' +
       querystring.stringify({
@@ -73,7 +59,7 @@ app.get('/callback', function(req, res) {
       }));
   } else {
     res.clearCookie(stateKey);
-    var authOptions = {
+    const authOptions = {
       url: 'https://accounts.spotify.com/api/token',
       form: {
         code: code,
@@ -88,11 +74,10 @@ app.get('/callback', function(req, res) {
 
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
-
-        var access_token = body.access_token,
+        const access_token = body.access_token,
             refresh_token = body.refresh_token;
 
-        var options = {
+        const options = {
           url: 'https://api.spotify.com/v1/me',
           headers: { 'Authorization': 'Bearer ' + access_token },
           json: true
@@ -103,7 +88,7 @@ app.get('/callback', function(req, res) {
           console.log(body);
         });
 
-        // we can also pass the token to the browser to make requests from there
+        // can also pass the token to the browser to make requests from there
         res.redirect('/#' +
           querystring.stringify({
             access_token: access_token,
